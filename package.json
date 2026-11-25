@@ -1,0 +1,18 @@
+{
+  "name": "sauna-tracker",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js watch",
+    "check": "node src/index.js check",
+    "report": "node src/index.js report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "playwright": "^1.65.1"
+  },
+  "type": "module"
+}

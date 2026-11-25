@@ -1,0 +1,57 @@
+name: Track sauna sessions
+
+on:
+  schedule:
+    # 35 min before each session (Toronto time). GitHub cron is UTC, so both the
+    # EST (UTC-5) and EDT (UTC-4) times are listed; the script skips runs it doesn't need.
+    - cron: '25 0,1,9,10,12,13,15,16,18,19,21,22 * * *'
+    - cron: '55 10,11,13,14,16,17,19,20,22,23 * * *'
+  workflow_dispatch:
+    inputs:
+      time:
+        description: 'Check one session now, e.g. 19:30 (blank = next upcoming session)'
+        required: false
+      date:
+        description: 'Date YYYY-MM-DD (blank = today in Toronto)'
+        required: false
+
+permissions:
+  contents: write
+
+# Run one at a time so a later run sees the earlier run's saved results.
+concurrency:
+  group: sauna-tracker
+  cancel-in-progress: false
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Check session
+        env:
+          IN_TIME: ${{ inputs.time }}
+          IN_DATE: ${{ inputs.date }}
+        run: |
+          if [ -n "$IN_TIME" ]; then node src/index.js check "$IN_TIME" $IN_DATE
+          else node src/index.js next; fi
+
+      - name: Save results
+        run: |
+          git config user.name "sauna-tracker-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then echo "No new data."; exit 0; fi
+          git commit -m "Record session data $(TZ=America/Toronto date '+%Y-%m-%d %H:%M')"
+          git pull --rebase
+          git push
