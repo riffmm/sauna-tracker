@@ -13,7 +13,14 @@ npm install
 npx playwright install chromium
 ```
 
-## Run it (pick one)
+## Where it runs
+It runs on **GitHub Actions** (`.github/workflows/track.yml`), so no PC needs to be on. Each run
+starts about 35 min before a session, waits until 5 min before it, reads the page, and saves the
+result into `data/` in this repository. To check a session by hand, open
+Actions → "Track sauna sessions" → "Run workflow".
+To see results, open `data/sessions.csv` or `data/daily.csv` on GitHub, or run `git pull` then `npm run report`.
+
+## Run it locally instead (pick one)
 - **Keep a terminal open:** `npm start`. It runs all day and checks each session 5 min before it starts.
 - **Windows Task Scheduler** (keeps working after a restart, no window needed):
   `powershell -ExecutionPolicy Bypass -File .\setup-schedule.ps1`. The PC still has to be on
